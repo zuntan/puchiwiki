@@ -39,9 +39,13 @@ async def main( svr_port, svr_addr, appSettings ):
 
     log = getLogger( __name__ )
 
+    log.debug( appSettings['basedir'] + "data/static".replace("/", os.path.sep) )
+
     application = tornado.web.Application(
             [
-                ( r"/",                 handler.MainHandler )
+                ( r"/",                 tornado.web.RedirectHandler, {"url": "/wiki/"} )
+            ,   ( r"/wiki/(.*)",        handler.WikiHandler, { "appSettings": appSettings } )
+            ,   ( r"/static/(.*)",      tornado.web.StaticFileHandler, { "path": appSettings['static_path'] } )
             ]
         ,   settings = appSettings
     )

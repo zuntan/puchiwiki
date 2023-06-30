@@ -9,12 +9,31 @@
 import sys
 import os
 import re
+import os.path
+
+from logging import getLogger
 
 import asyncio
 import tornado
 
-class MainHandler( tornado.web.RequestHandler ):
-    def get( self ):
-        self.write("Hello, world")
+class WikiHandler( tornado.web.RequestHandler ):
 
+    def initialize(self, appSettings ):
+        self.appSettings = appSettings
+
+    def get( self, path ):
+
+        log = getLogger( __name__ )
+
+        self.write( "Hello, world<br>" )
+        self.write( "<br>" )
+        self.write( path )
+        self.write( "<br>" )
+
+        log.debug( "a" )
+
+        try:
+            self.write( str( self.settings ) )
+        except Exception as e:
+            log.exception( e )
 #EOF
