@@ -1,0 +1,24 @@
+{# vim:set ts=4 sw=4 sts=0 fenc=utf-8:                  #}
+{# $Id: _not_permitted.html 2 2018-02-21 06:33:40Z junichi $ #}
+{% extends "_base.html" %}
+
+{% block main %}
+	<div id="app-1">[[[ message ]]]</div>
+{% end %}
+
+{% block script %}
+
+	const { createApp, ref } = Vue
+
+	createApp(
+		{
+			setup()
+			{
+				const message = ref( 'Hello vue!' )
+				return { message }
+			}
+		,	delimiters: [ '[[[', ']]]' ]
+		}
+	).mount( '#app-1' )
+
+{% end %}

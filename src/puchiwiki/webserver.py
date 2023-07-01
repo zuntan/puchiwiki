@@ -9,6 +9,7 @@
 import sys
 import os
 import os.path
+import re
 
 import asyncio
 import tornado
@@ -35,24 +36,19 @@ def setupLogger( logging_conf_param ):
 
     return ( logging_conf_target, logging_conf_loaded )
 
-async def main( svr_port, svr_addr, appSettings ):
+async def main( svr_port, svr_addr, app_settings ):
 
     log = getLogger( __name__ )
 
-    log.debug( appSettings['basedir'] + "data/static".replace("/", os.path.sep) )
-
-    application = tornado.web.Application(
-            [
-                ( r"/",                 tornado.web.RedirectHandler, {"url": "/wiki/"} )
-            ,   ( r"/wiki/(.*)",        handler.WikiHandler, { "appSettings": appSettings } )
-            ,   ( r"/static/(.*)",      tornado.web.StaticFileHandler, { "path": appSettings['static_path'] } )
-            ]
-        ,   settings = appSettings
-    )
-
-
-
     try:
+        application = tornado.web.Application(
+                [
+                    ( r"/",                 tornado.web.RedirectHandler, {"url": "/wiki/"} )
+                ,   ( r"/wiki/(.*)",        handler.WikiHandler, { "app_settings": app_settings } )
+                ]
+            ,   **app_settings
+        )
+
         server = tornado.httpserver.HTTPServer( application, xheaders=True )
         server.listen( svr_port, svr_addr )
 
@@ -100,17 +96,22 @@ def run(  _basedir = None ):
     app_date_tm_disp = ""
     app_date_tz_disp = ""
 
-    try:
-        d = datetime.strptime( re.sub(r'\..*', "+0000", _svn_commitdate ), "%Y-%m-%dT%H:%M:%S%z" ).astimezone()
-        app_date_dt_disp = d.strftime( "%Y-%m-%d" )
-        app_date_tm_disp = d.strftime( "%H:%M:%S" )
-        app_date_tz_disp = d.strftime( "%z" )
-    except Exception as e:
-        log.exception( e )
+#    try:
+#        d = datetime.strptime( re.sub(r'\..*', "+0000", _svn_commitdate ), "%Y-%m-%dT%H:%M:%S%z" ).astimezone()
+#        app_date_dt_disp = d.strftime( "%Y-%m-%d" )
+#        app_date_tm_disp = d.strftime( "%H:%M:%S" )
+#        app_date_tz_disp = d.strftime( "%z" )
+#    except Exception as e:
+#        log.exception( e )
 
     _app_conf.set( 'global', 'app_date_dt_disp', app_date_dt_disp )
     _app_conf.set( 'global', 'app_date_tm_disp', app_date_tm_disp )
     _app_conf.set( 'global', 'app_date_tz_disp', app_date_tz_disp )
+
+    _app_render = dict()
+
+    for x in _app_conf.options( 'render' ):
+        _app_render[ x ] = _app_conf.get( 'render', x, fallback='' )
 
     log.info( "*** start ***" )
 
@@ -123,8 +124,12 @@ def run(  _basedir = None ):
     log.info( "app_conf            :%s", _app_conf_target )
     log.info( "app_conf_loaded     :%s", _app_conf_loaded )
 
-    appSettings = dict(
-        debug                   = _app_conf.getboolean( 'tornadoapp', 'debug',                     fallback=False )
+    tornadoapp_debug = _app_conf.getboolean( 'tornadoapp', 'debug', fallback=False )
+
+    log.info( "tornadoapp_debug    :%s", tornadoapp_debug )
+
+    app_settings = dict(
+        debug                   = tornadoapp_debug
     ,   autoreload              = _app_conf.getboolean( 'tornadoapp', 'autoreload',                fallback=False )
     ,   compiled_template_cache = _app_conf.getboolean( 'tornadoapp', 'compiled_template_cache',   fallback=True )
     ,   static_hash_cache       = _app_conf.getboolean( 'tornadoapp', 'static_hash_cache',         fallback=True )
@@ -142,6 +147,7 @@ def run(  _basedir = None ):
     ,   static_path             = os.path.join( _basedir ,  "static" )
 
     ,   app_conf                = _app_conf
+    ,   app_render              = _app_render
     ,   basedir                 = _basedir
     )
 
@@ -150,7 +156,7 @@ def run(  _basedir = None ):
     log.info( "server start" )
 
     try:
-        asyncio.run( main( svr_port, svr_addr, appSettings ) )
+        asyncio.run( main( svr_port, svr_addr, app_settings ) )
 
     except KeyboardInterrupt as e:
         log.info( "KeyboardInterrupt" )

@@ -16,24 +16,36 @@ from logging import getLogger
 import asyncio
 import tornado
 
+from . import util
+
 class WikiHandler( tornado.web.RequestHandler ):
 
-    def initialize(self, appSettings ):
-        self.appSettings = appSettings
+    def initialize(self, app_settings ):
+        self._app_conf      = app_settings['app_conf']
+        self._app_render    = dict( app_settings['app_render'] )
+        self._errors        = []
+        self._infos         = []
+
+    def get_template_namespace( self ):
+
+        arg = dict(
+            app_render  = self._app_render
+        ,   errors      = self._errors
+        ,   infos       = self._infos
+        )
+
+        namespace = dict( super().get_template_namespace() )
+        namespace.update( arg = util.DotAccessibleWithNMD( arg ) )
+
+        return namespace
 
     def get( self, path ):
 
         log = getLogger( __name__ )
 
-        self.write( "Hello, world<br>" )
-        self.write( "<br>" )
-        self.write( path )
-        self.write( "<br>" )
-
-        log.debug( "a" )
-
         try:
-            self.write( str( self.settings ) )
+            self.render('wiki.html' )
+
         except Exception as e:
             log.exception( e )
 #EOF
