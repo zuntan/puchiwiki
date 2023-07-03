@@ -18,6 +18,8 @@ import tornado
 
 from . import util
 
+INDEX_FORMAT = re.compile( r"^\s*([^\s]+)\s+([^\s]+)" );
+
 class WikiHandler( tornado.web.RequestHandler ):
 
     def initialize(self, app_settings ):
@@ -25,6 +27,9 @@ class WikiHandler( tornado.web.RequestHandler ):
         self._app_render    = dict( app_settings['app_render'] )
         self._errors        = []
         self._infos         = []
+
+        self._basedir       = app_settings['basedir']
+        self._lock          = app_settings['lock']
 
     def get_template_namespace( self ):
 
@@ -39,12 +44,60 @@ class WikiHandler( tornado.web.RequestHandler ):
 
         return namespace
 
-    def get( self, path ):
+    async def get_content( self, path ):
+
+        ret = ( False, None )
 
         log = getLogger( __name__ )
 
+        path_wiki = os.path.join( self._basedir, "data", "wiki" )
+
+        path_target = ""
+
         try:
-            self.render('wiki.html' )
+
+            async with self._lock:
+                if path == "":
+                    path_target = "_w_root.txt"
+                else:
+
+                    with open( os.path.join( path_wiki, "_w_index.txt" ), "r", encoding="utf-8" ) as f_idx:
+                        for ln in f_idx:
+                            m = INDEX_FORMAT.match( ln )
+                            if m:
+                                if m[2] == path:
+                                    path_target = m[1]
+                                    break
+
+
+                if path_target != "":
+                    cont = ""
+
+                    with open( os.path.join( path_wiki, path_target ), "r", encoding="utf-8" ) as f_cont:
+                        for ln in f_cont:
+                            cont += ln
+
+                    ret = ( True, cont )
+
+        except Exception as e:
+            log.fatal( e )
+
+        return ret
+
+    async def get( self, path ):
+
+        log = getLogger( __name__ )
+
+        log.debug( path )
+
+        try:
+
+            ( ok, cont ) = await self.get_content( path )
+
+            if ok:
+                await self.render( 'wiki.html', **dict( cont = cont ) )
+            else:
+                await self.render( 'not_found.html' )
 
         except Exception as e:
             log.exception( e )

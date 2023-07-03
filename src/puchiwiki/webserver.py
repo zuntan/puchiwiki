@@ -11,17 +11,19 @@ import os
 import os.path
 import re
 
-import asyncio
-import tornado
-
-from . import handler
-
 from datetime import datetime, timezone, timedelta
 
 import logging.config
 from logging import getLogger
 
 import configparser
+
+import asyncio
+import tornado
+import tornado.locks
+
+from . import handler
+
 
 CONFFILE_ENCODING = "utf8"
 
@@ -149,6 +151,8 @@ def run(  _basedir = None ):
     ,   app_conf                = _app_conf
     ,   app_render              = _app_render
     ,   basedir                 = _basedir
+
+    ,   lock                    = tornado.locks.Lock()
     )
 
     ### settings end ###

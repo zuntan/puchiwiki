@@ -3,22 +3,24 @@
 {% extends "_base.html" %}
 
 {% block main %}
-	<div id="app-1">[[[ message ]]]</div>
+    <div id="app-1">[[[ message ]]]</div>
+
+    <pre>{{cont}}</pre>
 {% end %}
 
 {% block script %}
 
-	const { createApp, ref } = Vue
+    const { createApp, ref } = Vue
 
-	createApp(
-		{
-			setup()
-			{
-				const message = ref( 'Hello vue!' )
-				return { message }
-			}
-		,	delimiters: [ '[[[', ']]]' ]
-		}
-	).mount( '#app-1' )
+    createApp(
+        {
+            setup()
+            {
+                const message = ref( 'Hello vue!' )
+                return { message }
+            }
+        ,   delimiters: [ '[[[', ']]]' ]
+        }
+    ).mount( '#app-1' )
 
 {% end %}
