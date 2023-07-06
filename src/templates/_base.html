@@ -7,13 +7,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <title>{% block title %}{{arg.app_render.title_prefix}}{% end %}</title>
-    {% raw arg.app_render.vue_js_include %}
+
+    {% raw arg.app_render.react_js_include %}
     {% raw arg.app_render.bootstrap_css_include %}
 
     {% block head %}
     {% end %}
 
     <link href="/static/_base.css" rel="stylesheet">
+
+    <script>
+    {% block head_script %}
+    {% end %}
+    </script>
 
 </head>
 <body >
@@ -87,11 +93,13 @@
 {% end %}
 </footer>
 
-<script src="/static/_common.js"></script>
 {% raw arg.app_render.bootstrap_js_include %}
+
+<script src="/static/_common.js"></script>
 <script>
 {% block script %}
 {% end %}
 </script>
+
 </body>
 </html>

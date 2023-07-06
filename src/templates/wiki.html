@@ -3,24 +3,44 @@
 {% extends "_base.html" %}
 
 {% block main %}
-    <div id="app-1">[[[ message ]]]</div>
-
-    <pre>{{cont}}</pre>
+<hr>
+<pre id="rcont">{{ cont }}</pre>
+<hr>
+<div id="wcont"></div>
+<hr>
 {% end %}
 
 {% block script %}
 
-    const { createApp, ref } = Vue
+'use strict';
 
-    createApp(
+const e = React.createElement;
+
+class LikeButton extends React.Component
+{
+    constructor(props)
+    {
+        super(props);
+        this.state = { liked: false };
+    }
+
+    render()
+    {
+        if (this.state.liked)
         {
-            setup()
-            {
-                const message = ref( 'Hello vue!' )
-                return { message }
-            }
-        ,   delimiters: [ '[[[', ']]]' ]
+            return 'You liked this.';
         }
-    ).mount( '#app-1' )
+
+        return e(
+            'button',
+            { onClick: () => this.setState({ liked: true }) },
+            'Like'
+        );
+    }
+}
+
+const wcont = document.querySelector('#wcont');
+const root = ReactDOM.createRoot(wcont);
+root.render( e( LikeButton ) );
 
 {% end %}
